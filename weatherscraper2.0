@@ -1,0 +1,64 @@
+import requests
+import csv
+from bs4 import BeautifulSoup
+
+        ##############################################  
+        #                                          #
+        #                                        #
+        #                                      #
+        #                                    #
+        #                                  #
+        #                                #
+        #                              #
+        #                            #
+        #             ###############
+        #             #
+        #             #
+        #             #
+        #             # 
+        #             # 
+        #             # 
+        #             #
+        ###############
+
+
+
+#create weather variable
+weather_source = requests.get('https://weather.com/weather/tenday/l/USAZ0166:1:US').text
+
+#create beautifulsoup object
+soup = BeautifulSoup(weather_source, 'lxml')
+
+#write to csv file, create csv writer object, create rows for csv file
+weather_csv = open('Phoenix-Weather.csv', 'w')
+csv_writer = csv.writer(weather_csv)
+csv_writer.writerow(['Date','Description', 'High/Low', 'Precipitation', 'Wind', 'Humidity'])
+
+time = soup.find('div', {'class':'observation-timestamp'}).text.strip()
+print(time)
+
+date_time = soup.find_all('span', {'class':'day-detail clearfix'})[2].text.strip()
+print(date_time)
+
+#loop through date text and write them to file
+for x in soup.find_all('span', {'class':'day-detail clearfix'}):
+    date = x.text.strip()
+    #loop through description text and write them to file
+    for x in soup.find_all('td',{'class':'description'}):
+        description = x.text.strip()
+        #loop through high/low text and write them to file
+        for x in soup.find_all('td',{'class':'temp'}):
+            temp = x.text.strip()
+            #loop through precipitation text and write them to file
+            for x in soup.find_all('td', {'class':'precip'}):
+                precip = x.text.strip()
+                #loop through wind text and write them to file
+                for x in soup.find_all('td', {'class':'wind'}):
+                    wind =  x.text.strip()
+                    #loop through humidity text and write them to file
+                    for x in soup.find_all('td',{'class':'humidity'}):
+                        humid = x.text.strip()
+                        csv_writer.writerow([date,description,temp,precip,wind,humid])
+
+#close out csv file to ensure proper data is written
+weather_csv.close()
