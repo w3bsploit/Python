@@ -1,0 +1,102 @@
+        ##############################################  
+        #                                          #
+        #                                        #
+        #                                      #
+        #                                    #
+        #                                  #
+        #                                #
+        #                              #
+        #                            #
+        #             ###############
+        #             #
+        #             #
+        #             #
+        #             # 
+        #             # 
+        #             # 
+        #             #
+        ###############
+
+import requests
+import csv
+from bs4 import BeautifulSoup
+
+#create global var for search options (buy it now, location, price range, free shipping)
+search_term = ''
+location = 0
+BIN = 1
+price1 = 0
+price2 = 100
+free_shipping = 0
+
+# create method to get user input
+def userinput():
+    # print welcome statement and instructions
+    print("Welcome to Ebay Webscraper 2.0!")
+    print("In a minute you will be asked to type in search parameters to scrape")
+    print("Examples of this include: Item location, price range, free shipping and condition")
+    # obtain user-input for search variables
+    try:
+        search_term = input("Enter a product you'd like to search for: ")
+        user_bin = int(input("Would you like to include 'Buy it now' in your search?(1=yes, 2=no): "))
+        user_location = int(input("Are you located in the US? (1=yes, 2=no): "))
+        user_price1 = int(input("Enter the minimum price: "))
+        user_price2 = int(input("Enter the maximum price: "))
+        user_FS = int(input("Would you like to include Free shipping?(1=yes, 2=no): "))
+        # create conditional statements which adjusts the search term based on user input
+        if user_bin == 1:
+            BIN = 1
+        if user_location == 1:
+            location = 1
+        if type(user_price1) == int and type(user_price2) == int:
+            price1 = user_price1
+            price2 = user_price2
+        if user_FS == 1:
+            free_shipping = 1
+        else:
+            #this is pretty uneccessary but did it anyway
+            BIN = 0
+            location = 98
+            price1 = 0
+            price2 = 100
+            free_shipping = 0
+    except ValueError:
+        print("OOPS! Looks like you typed something incorrect!")
+
+    string = ' '
+    result = []
+
+    #split the search result
+    if len(search_term) == 1:
+        string = search_term
+    elif len(search_term) > 1:
+        result = search_term.split(' ')
+    #loop through result and store it as a sentence
+
+    for x in result:
+            string += '+' + x
+
+
+    #create urls to scrape , **keep in mind all the search parameters user specifies**
+    ebay_link = requests.get('https://www.ebay.com/sch/i.html?_from=R40&_nkw=' + string + '&_sacat=0&LH_TitleDesc=0&LH_BIN=' + str(BIN) +'&LH_PrefLoc=' + str(location) + '&LH_FS='+ str(free_shipping) + '&_udlo=' + str(price1) + '&_udhi=' + str(price2) + '&rt=nc').text
+
+    soup = BeautifulSoup(ebay_link, 'lxml')
+
+    #print(ebay_link)
+
+    ebay_csv = open('ebay_search.csv', 'w')
+    csv_writer = csv.writer(ebay_csv)
+    csv_writer.writerow(['Product Title', 'Price'])
+
+
+
+    for t in soup.find_all('h3',{'class':'s-item__title'}):
+        ebay_title = t.text.strip()
+        for p in soup.find_all('span', {'class':'s-item__price'}):
+            ebay_price = p.text.strip()
+            csv_writer.writerow([ebay_title, ebay_price])
+
+    ebay_csv.close()
+
+
+userinput()
